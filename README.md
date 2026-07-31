@@ -1,181 +1,299 @@
-📄 Multi-Agent AI: Writer + Editor (with Web Search & Revision Loop)
+# 🤖 Multi-Agent AI: Writer + Editor
 
-An intelligent content-generation system built using **LangGraph Multi-Agent Orchestration** and **Live Web Search (RAG-style grounding)**. Enter any topic, and the system automatically drafts, reviews, revises, and polishes an article — powered by **two collaborating AI agents**. The Writer researches and drafts; the Editor judges, sends revision feedback, and produces the final polished output.
+### Agentic AI Content Generation System with Web Search, Revision Loop & Change Tracking
 
----
-
-## 🚀 Features
-
-- 📝 Enter any topic and generate a full article automatically
-- 🤖 **2-Agent Architecture** — Writer Agent + Editor Agent, each with a distinct role
-- 🔍 **Live Web Search (Tavily)** — Writer grounds its draft in real, current information instead of relying only on static training knowledge
-- 🔁 **Revision Loop** — Editor judges draft quality and can send it back to the Writer with feedback (up to 2 revision cycles) before finalizing
-- ✅ **Quality Judgment Step** — Editor decides "GOOD" vs "REVISE" before polishing
-- ✂️ **Final Polish Pass** — grammar, clarity, structure, and tone improvements
-- 📊 **Side-by-side Comparison** — raw Writer draft vs. final Editor output shown together
-- ⬇️ **Download Button** — save the final output as a `.txt` file
-- 🖥️ Clean Streamlit web interface
-- 🔐 Secure API key management via `.env`
+![Python](https://img.shields.io/badge/Python-3.11-blue)
+![Streamlit](https://img.shields.io/badge/Streamlit-App-red)
+![LangGraph](https://img.shields.io/badge/LangGraph-Multi--Agent-orange)
+![Groq](https://img.shields.io/badge/Groq-LLM%20API-green)
+![Tavily](https://img.shields.io/badge/Tavily-Web%20Search-purple)
 
 ---
 
-## 🏗️ System Architecture
+## 📌 Overview
 
+Multi-Agent AI: Writer + Editor is an agentic content-generation system built to demonstrate real multi-agent orchestration using **LangGraph**. Instead of a single AI call producing one response, two specialized AI agents collaborate — one drafts, the other reviews, revises, and finalizes.
+
+The system automatically:
+
+✅ Searches the web for current, relevant information on any topic
+✅ Drafts a full article using an AI Writer Agent
+✅ Judges the draft's quality using an AI Editor Agent
+✅ Sends the draft back for revision if it isn't good enough (autonomous feedback loop)
+✅ Produces a final, polished version
+✅ Tracks and displays exactly what the Editor changed
+
+---
+
+## 🖥️ Application Preview
+
+### Input
+
+* Topic Entry Field
+* "Run Agents" Trigger Button
+
+### Agent Pipeline
+
+* Writer Agent Draft Generation
+* Editor Agent Quality Judgment
+* Automatic Revision Loop (up to 2 cycles)
+* Editor Final Polish Pass
+
+### Output
+
+* Raw Writer Draft
+* Final Edited Output
+* Revision Count Display
+* Side-by-Side Diff View (Editor's Changes)
+* Downloadable Final Report
+
+---
+
+# 🚀 Key Features
+
+## 🤖 Multi-Agent Architecture
+
+The system runs on two distinct, specialized AI agents:
+
+| Agent | Role | Supported |
+| --- | --- | --- |
+| Writer Agent | Research + Drafting | ✅ |
+| Editor Agent | Quality Judgment | ✅ |
+| Editor Agent | Revision Feedback | ✅ |
+| Editor Agent | Final Polishing | ✅ |
+
+---
+
+## 🔍 Live Web Search Grounding (Tavily)
+
+Instead of relying only on the LLM's static training knowledge, the Writer Agent performs a real-time web search before drafting.
+
+Features:
+
+* Current, Real-World Information Retrieval
+* Source-Backed Draft Generation
+* Reduces Outdated or Generic Content
+
+Example:
+
+```text
+Search Query: "Prophet Muhammad (PBUH)"
+Sources Retrieved: Madinah Media, MuslimSG, Southern Equip
 ```
-                     ┌───────────────────┐
-                     │   User enters a     │
-                     │      topic          │
-                     └─────────┬──────────┘
-                               │
-                               ▼
-                     ┌───────────────────┐
-                     │   Streamlit UI      │
-                     │  "Run Agents" click │
-                     └─────────┬──────────┘
-                               │
-                               ▼
-                ┌───────────────────────────────┐
-                │        WRITER AGENT            │
-                │  (LLM: Groq - gpt-oss-120b)     │
-                │                                 │
-                │  • First run → Tavily Web Search│
-                │    fetches current info         │
-                │  • Revision run → uses Editor's │
-                │    feedback instead              │
-                │  • Generates the draft           │
-                └───────────────┬─────────────────┘
-                                │
-                                ▼
-                ┌───────────────────────────────┐
-                │        EDITOR AGENT             │
-                │  (LLM: Groq - gpt-oss-120b)      │
-                │                                  │
-                │  Step 1: Judge draft quality      │
-                │   → "GOOD" or "REVISE"            │
-                └───────────────┬──────────────────┘
-                                │
-                 ┌──────────────┴───────────────┐
-                 │                               │
-          REVISE (feedback given)          GOOD (or max
-                 │                         revisions reached)
-                 ▼                               │
-        ┌─────────────────┐                      ▼
-        │  Loop back to    │           ┌───────────────────┐
-        │  WRITER AGENT    │           │   Final Polish       │
-        │  (max 2 times)   │           │   by Editor Agent     │
-        └─────────────────┘           └──────────┬───────────┘
-                                                   │
-                                                   ▼
-                                       ┌───────────────────────┐
-                                       │   Final Output shown    │
-                                       │   in Streamlit UI +     │
-                                       │   Download button        │
-                                       └───────────────────────┘
+
+---
+
+## 🔁 Autonomous Revision Loop
+
+The Editor Agent doesn't just polish blindly — it first **judges** the draft.
+
+* If the draft has real issues → sends feedback back to the Writer
+* Writer rewrites based on that feedback
+* Process repeats up to 2 times (safety limit)
+* Once approved, moves to final polishing
+
+Example:
+
+```text
+Editor Judgment: REVISE
+Feedback: "Introduction is too generic, needs more specific detail."
+Revisions Made: 1
 ```
 
 ---
 
-## 🧠 The Two Agents
+## 📊 Change Tracking (Diff View)
 
-### ✍️ Agent 1 — Writer
-**Role:** Researcher + Drafter
-**Responsibility:** Search the web for current facts on the topic, then write a clear, well-structured first draft. On revision rounds, rewrite based on the Editor's feedback instead of searching again.
+The dashboard provides a professional, side-by-side comparison of the Writer's draft vs. the Editor's final version.
 
-### ✅ Agent 2 — Editor
-**Role:** Critic + Finalizer
-**Responsibility:** Judge whether the Writer's draft is good enough. If not, send specific feedback back to the Writer (revision loop, max 2 rounds). Once approved (or the revision limit is hit), perform a final polish pass — fixing grammar, tightening structure, removing repetition, and improving tone.
+* Line-by-Line Diff Table
+* Color-Coded Additions, Removals, and Edits
+* Scrollable, GitHub-style Diff Display
 
-> Both agents use the same underlying LLM (Groq's `openai/gpt-oss-120b`) but behave completely differently because each has its own system prompt, role, and responsibility — this is what makes them distinct "agents" rather than one generic AI call.
+This helps users clearly see what the Editor Agent actually improved.
 
 ---
 
-## 🛠️ Tech Stack
+## 📈 Result Comparison
 
-| Component | Tool |
-|---|---|
-| LLM | Groq API (`openai/gpt-oss-120b`) |
-| Agent Orchestration | LangGraph |
-| LLM Integration | LangChain (`langchain-groq`, `langchain-core`) |
-| Web Search | Tavily API |
-| UI | Streamlit |
-| Config/Secrets | python-dotenv |
+### Output Analysis
+
+The application generates:
+
+* Raw Writer Draft (last version before finalizing)
+* Final Edited Output
+* Revision Count Indicator
+* Highlighted Diff Table
+
+This helps users quickly understand how much the Editor Agent contributed.
 
 ---
 
-## ⚙️ Setup Instructions
+## 📋 Example Run
+
+```text
+Topic: "Prophet Muhammad (PBUH)"
+
+Revisions Made by Editor: 1
+
+Editor's Final Polish Included:
+- Removed draft-style labels ("Working Draft", "First Draft")
+- Tightened section headings for conciseness
+- Smoothed sentence phrasing and flow
+- Condensed table wording
+- Preserved all facts and structure
+```
+
+---
+
+# 🏗️ System Workflow
+
+```text
+User Enters Topic
+      │
+      ▼
+Streamlit UI ("Run Agents")
+      │
+      ▼
+Writer Agent (Groq LLM)
+      │
+      ├── Fresh Topic → Tavily Web Search → Draft
+      └── Revision Round → Uses Editor Feedback → Draft
+      │
+      ▼
+Editor Agent (Groq LLM)
+      │
+      ├── Judges Draft: GOOD or REVISE
+      │
+      ├── REVISE → Feedback → Loop back to Writer (max 2x)
+      │
+      └── GOOD → Final Polish
+      │
+      ▼
+Final Output + Diff View + Download Button
+```
+
+---
+
+# 🧠 Technologies Used
+
+## Artificial Intelligence
+
+* Groq API (LLM: `openai/gpt-oss-120b`)
+* LangGraph (Multi-Agent Orchestration)
+* LangChain (LLM Message Handling)
+* Tavily API (Web Search / Real-Time Grounding)
+
+## Frontend
+
+* Streamlit
+
+## Utilities
+
+* python-dotenv (Secure API Key Management)
+* difflib (Change Tracking / Diff Generation)
+
+---
+
+# 📂 Project Structure
+
+```text
+multi-agent-langgraph/
+│
+├── app.py
+├── main.py
+├── requirements.txt
+├── README.md
+├── .env
+│
+└── venv/
+```
+
+---
+
+# ⚙️ Installation
+
+Clone repository:
 
 ```bash
-# 1. Create project folder & virtual environment
-mkdir multi-agent-langgraph
-cd multi-agent-langgraph
+git clone https://github.com/Noman-Nawaz12/Multi-Agent-Content-Writer.git
+cd Multi-Agent-Content-Writer
+```
+
+Create virtual environment:
+
+```bash
 python -m venv venv
+```
+
+Activate environment:
+
+```bash
 venv\Scripts\activate
+```
 
-# 2. Install dependencies
-pip install langgraph langchain langchain-groq python-dotenv streamlit tavily-python
+Install dependencies:
 
-# 3. Add API keys to .env
-echo GROQ_API_KEY=your_groq_key_here > .env
-echo TAVILY_API_KEY=your_tavily_key_here >> .env
+```bash
+pip install -r requirements.txt
+```
 
-# 4. Run the app
+Add API keys to `.env`:
+
+```env
+GROQ_API_KEY=your_groq_key_here
+TAVILY_API_KEY=your_tavily_key_here
+```
+
+---
+
+# ▶️ Run Application
+
+```bash
 streamlit run app.py
 ```
 
----
+Open:
 
-## 📂 Project Structure
-
-```
-multi-agent-langgraph/
-├── venv/                # Virtual environment
-├── .env                 # API keys (private, never share)
-├── requirements.txt     # Installed packages list
-├── main.py              # Early console-only test version (not actively used)
-├── app.py               # Main Streamlit app - this is what actually runs
-└── README.md            # This file
+```text
+http://localhost:8501
 ```
 
 ---
 
-## 📊 Shared State Between Agents
+# 🌐 Live Deployment
 
-| Field | Type | Purpose |
-|---|---|---|
-| `topic` | str | Topic entered by the user |
-| `draft` | str | Writer's current draft |
-| `final_output` | str | Editor's final polished version |
-| `feedback` | str | Editor's revision notes for the Writer |
-| `revision_count` | int | How many revision cycles have happened |
-| `needs_revision` | bool | Controls whether the graph loops back to the Writer |
+Deployed on **Streamlit Community Cloud**, connected via GitHub for continuous deployment.
 
-`MAX_REVISIONS = 2` — prevents the Writer to Editor loop from running forever.
+API keys are securely managed using Streamlit Cloud's **Secrets** manager (TOML format), keeping them out of the public repository.
 
 ---
 
-## 📝 Example Run
+# 🎯 Future Enhancements
 
-**Topic:** "Prophet Muhammad (PBUH)"
-**Revisions made by Editor:** 1
-
-- Web search pulled in real references (Madinah Media, MuslimSG, Southern Equip), giving the draft cited facts and footnotes.
-- Editor requested one revision before approving.
-- Final polish removed draft-style labels (e.g., "Working Draft"), tightened section headings, smoothed sentence flow, and condensed table wording — while keeping all facts and structure intact.
-
----
-
-## ⚠️ Notes & Limitations
-
-- The Editor's "GOOD" vs "REVISE" judgment is an LLM decision, not a hard rule - it may occasionally be inconsistent.
-- Without web search, the LLM would rely only on its static training knowledge, which can be outdated.
-- API keys must stay private - regenerate immediately if ever exposed accidentally.
+* Third Agent: Fact-Checker between Writer and Editor
+* Selectable Writing Style/Tone (Formal, Casual, Persuasive)
+* Live Streaming Output
+* Run History Storage (Database)
+* Export as PDF/DOCX
+* n8n Visual Workflow Version (No-Code Alternative)
 
 ---
 
-## 🔮 Possible Future Improvements
+# 👨‍💻 Developer
 
-- Add a third agent (e.g., a Fact-Checker) between Writer and Editor
-- Let the user choose a tone/style (formal, casual, persuasive)
-- Stream output live instead of waiting for the full result
-- Save run history to a local database
-- Export final output as `.docx` or `.pdf`
+### Noman Nawaz
+
+Software Engineering Student
+Foundation University Islamabad
+
+GitHub:
+[Noman Nawaz LinkedIn](https://www.linkedin.com/in/noman-nawaz-513182250)
+
+---
+
+# ⚠️ Disclaimer
+
+This project is intended for educational and demonstration purposes, showcasing agentic AI and multi-agent orchestration concepts using LangGraph.
+
+Generated content should be reviewed before use in any professional, academic, or publication context.
