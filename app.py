@@ -1,4 +1,5 @@
 import os
+import difflib
 import streamlit as st
 from dotenv import load_dotenv
 from typing import TypedDict
@@ -32,6 +33,71 @@ def web_search(query: str) -> str:
         return combined
     except Exception as e:
         return f"Search failed: {e}"
+
+
+def generate_diff_html(old_text: str, new_text: str) -> str:
+    """Compare old (draft) vs new (final) text and return a clean side-by-side HTML diff table."""
+    old_lines = [line for line in old_text.splitlines() if line.strip() != ""]
+    new_lines = [line for line in new_text.splitlines() if line.strip() != ""]
+
+    differ = difflib.HtmlDiff(wrapcolumn=70)
+    raw_table = differ.make_table(
+        old_lines, new_lines,
+        fromdesc="Writer Draft", todesc="Final Edited Output",
+        context=True, numlines=1
+    )
+    return raw_table
+
+
+DIFF_CSS = """
+<style>
+.diff-wrapper table.diff {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: 'Source Code Pro', monospace;
+    font-size: 13px;
+    background-color: #0e1117;
+    color: #e0e0e0;
+}
+.diff-wrapper table.diff td, .diff-wrapper table.diff th {
+    padding: 4px 8px;
+    vertical-align: top;
+}
+.diff-wrapper table.diff th {
+    background-color: #1c1f26;
+    color: #9aa5b1;
+    text-align: left;
+    border-bottom: 1px solid #333;
+}
+.diff-wrapper .diff_header {
+    background-color: #1c1f26;
+    color: #6c7686;
+    text-align: right;
+    padding-right: 6px;
+}
+.diff-wrapper .diff_next {
+    background-color: #1c1f26;
+}
+.diff-wrapper .diff_add {
+    background-color: #163b1f;
+    color: #8fe39a;
+}
+.diff-wrapper .diff_sub {
+    background-color: #3b1616;
+    color: #f28b8b;
+}
+.diff-wrapper .diff_chg {
+    background-color: #3b3316;
+    color: #f2d98b;
+}
+.diff-wrapper {
+    max-height: 600px;
+    overflow-y: auto;
+    border: 1px solid #333;
+    border-radius: 8px;
+}
+</style>
+"""
 
 
 # ---------------------------
@@ -214,3 +280,13 @@ if "result" in st.session_state:
         file_name="final_output.txt",
         mime="text/plain",
     )
+
+    # ---------------------------
+    # Diff View: show what the Editor changed
+    # ---------------------------
+    st.subheader("🔍 What the Editor Changed")
+    st.caption("🟢 Green = added by Editor | 🔴 Red = removed by Editor | 🟡 Yellow = changed line")
+
+    diff_table_html = generate_diff_html(result["draft"], result["final_output"])
+    st.markdown(DIFF_CSS, unsafe_allow_html=True)
+    st.markdown(f'<div class="diff-wrapper">{diff_table_html}</div>', unsafe_allow_html=True)
